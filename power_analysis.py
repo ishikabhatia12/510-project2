@@ -1,14 +1,26 @@
-#AI helped generate this code
+# AI was used to help generate this code
 
+import pandas as pd
 from statsmodels.stats.power import TTestIndPower
-import math
 
-# Published study results:
-# No chilling: mean diameter = 6.800 cm
-# Chilled 120 minutes: mean diameter = 6.167 cm
-# Pooled standard deviation ≈ 0.129 cm
+# Load pilot data
+df = pd.read_csv("data/pilot_data.csv")
 
-effect_size = (6.800 - 6.167) / 0.129
+# Pilot study results
+control = df[df["chilling_mins"] == 0]["diameter_cm"]
+treatment = df[df["chilling_mins"] == 30]["diameter_cm"]
+
+control_mean, control_std = control.mean(), control.std()
+treatment_mean, treatment_std = treatment.mean(), treatment.std()
+pooled_std = ((control_std**2 + treatment_std**2) / 2) ** 0.5
+
+print("Pilot study results:")
+print(f"Control: mean = {control_mean:.3f}, std = {control_std:.3f}")
+print(f"Treatment: mean = {treatment_mean:.3f}, std = {treatment_std:.3f}")
+print(f"Pooled std = {pooled_std:.3f}")
+
+effect_size = abs(treatment_mean - control_mean) / pooled_std  # Cohen's d
+print(f"Cohen's d = {effect_size:.3f}")
 
 analysis = TTestIndPower()
 n = analysis.solve_power(
@@ -17,5 +29,4 @@ n = analysis.solve_power(
     power=0.80,
     alternative='two-sided'
 )
-
-print(f"Required sample size per group: {math.ceil(n)}")
+print(f"Required sample size per group: {n:.0f}")
